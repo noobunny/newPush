@@ -1,0 +1,33 @@
+# ============================================
+# 每日新闻速览 · 邮件推送配置
+# ============================================
+
+# --- 邮箱配置 (163 邮箱) ---
+email:
+  smtp_host: "smtp.163.com"
+  smtp_port: 465
+  # smtp_user / smtp_password / to_email 从 GitHub Secrets 注入
+  # 本地测试时可直接填在这里（不要提交到 GitHub）
+
+# --- 天气配置 ---
+weather:
+  enabled: true
+  city: "北京"
+
+# --- 板块开关 ---
+sections:
+  holiday_countdown: true     # 节日倒计时
+  daily_quote: true           # 每日微语
+  weibo_hot: true             # 微博热搜
+  baidu_hot: true             # 百度热搜
+  zhihu_hot: true             # 知乎热榜
+  toutiao_hot: true           # 头条热榜
+  domestic_news: true         # 国内要闻
+  economy_news: true          # 经济消费
+  tech_news: true             # 科技教育
+  world_news: true            # 国际观察
+
+# --- 各板块数量 ---
+limits:
+  hot_events: 5               # 每个热点源取 Top N
+  news_per_category: 3        # 每个新闻分类取 N 条
