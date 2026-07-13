@@ -31,6 +31,7 @@ sections:
   economy_news: true          # 经济消费
   tech_news: true             # 科技教育
   world_news: true            # 国际观察
+  it_knowledge: true          # 每日IT知识点
 
 # --- 各板块数量 ---
 limits:

@@ -175,6 +175,19 @@
     background: #f0eeff; padding: 1px 6px; border-radius: 4px;
     margin-left: 6px; vertical-align: middle; font-weight: 500;
   }
+  /* IT 知识点卡片 */
+  .knowledge-card {
+    margin: 6px 0 14px; padding: 16px;
+    background: linear-gradient(135deg, #f3f0ff 0%, #ece6ff 100%);
+    border-radius: 10px; border: 1px solid #ddd6f3;
+  }
+  .knowledge-title {
+    font-size: 16px; font-weight: 700; color: #4a3f7a;
+    margin-bottom: 8px;
+  }
+  .knowledge-desc {
+    font-size: 14px; color: #5a4f8a; line-height: 1.8;
+  }
   /* 尾部 */
   .footer {
     padding: 16px 16px 20px; text-align: center;
@@ -249,6 +262,15 @@
     .footer {
       padding: 14px 14px 16px; font-size: 11px;
     }
+    .knowledge-card {
+      padding: 14px; border-radius: 8px;
+    }
+    .knowledge-title {
+      font-size: 14px;
+    }
+    .knowledge-desc {
+      font-size: 13px;
+    }
   }
 
   /* 暗色模式适配 (支持的邮件客户端) */
@@ -279,6 +301,9 @@
     .news-category-header { color: #9ea8b4; border-left-color: #3a3e46; }
     .footer { color: #5a6068; border-top-color: #363940; }
     .ai-badge { color: #7a8390; background: #363940; }
+    .knowledge-card { background: linear-gradient(135deg, #2d2a3d 0%, #252236 100%); border-color: #3a3550; }
+    .knowledge-title { color: #b8a8e8; }
+    .knowledge-desc { color: #8a7ab8; }
   }
 </style>
 </head>
@@ -435,6 +460,21 @@
     {% endfor %}
 
   </div>
+
+  <!-- 每日IT知识点 -->
+  {% if it_knowledge and it_knowledge.success %}
+  <div class="section">
+    <div class="section-title">
+      <span class="emoji">💡</span>
+      <span class="text">每日IT知识点</span>
+      <span class="ai-badge">AI 生成</span>
+    </div>
+    <div class="knowledge-card">
+      <div class="knowledge-title">{{ it_knowledge.title }}</div>
+      <div class="knowledge-desc">{{ it_knowledge.description }}</div>
+    </div>
+  </div>
+  {% endif %}
 
   <!-- 页脚 -->
   <div class="footer">

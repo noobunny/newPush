@@ -18,7 +18,7 @@ from jinja2 import Environment, FileSystemLoader
 # 添加项目根目录到 sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from sources import weather, hot_events, news, quote, holiday, ai_summary
+from sources import weather, hot_events, news, quote, holiday, ai_summary, it_knowledge
 from email_sender import send_email
 
 
@@ -182,10 +182,18 @@ def main():
         f = executor.submit(quote.fetch_quote)
         future_to_key[f] = "quote"
 
+    # 2e. 每日IT知识点（和 AI 摘要共用一个 key，异步并行）
+    it_knowledge_data = None
+    if sections.get("it_knowledge", True):
+        api_key = os.environ.get("DEEPSEEK_API_KEY", "")
+        f = executor.submit(it_knowledge.fetch_knowledge, api_key)
+        future_to_key[f] = "it_knowledge"
+
     # 等待所有结果
     hot_list = []
     news_results = []
     daily_quote = None
+    it_knowledge_data = None
     hot_source_names = {k: v[0] for k, v in hot_sources.items()}
 
     for future in as_completed(future_to_key):
@@ -210,6 +218,9 @@ def main():
             elif key == "quote":
                 fb = random.choice(quote.FALLBACK_QUOTES)
                 daily_quote = {"success": True, "text": fb["text"], "source": fb["source"]}
+            elif key == "it_knowledge":
+                item = random.choice(it_knowledge.FALLBACK_KNOWLEDGE)
+                it_knowledge_data = {"success": True, "title": item["title"], "description": item["description"]}
             continue
 
         if key == "weather":
@@ -237,6 +248,12 @@ def main():
                 print(f"   💬 微语: {result['text'][:30]}...")
             else:
                 print(f"   ⚠️  微语获取失败")
+        elif key == "it_knowledge":
+            it_knowledge_data = result
+            if result.get("success"):
+                print(f"   💡 IT知识点: {result['title'][:30]}...")
+            else:
+                print(f"   ⚠️  IT知识点获取失败")
 
     executor.shutdown(wait=False)
     t_network = time.time() - t_start
@@ -264,6 +281,7 @@ def main():
         hot_events=hot_list,
         news_categories=news_results,
         quote=daily_quote,
+        it_knowledge=it_knowledge_data,
         has_ai_summary=has_ai,
         generated_at=now.strftime("%Y-%m-%d %H:%M"),
     )
