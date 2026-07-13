@@ -14,6 +14,11 @@ weather:
   enabled: true
   city: "北京"
 
+# --- AI 智能摘要配置 ---
+ai:
+  enabled: true                # 是否启用 AI 摘要
+  # api_key 从环境变量 DEEPSEEK_API_KEY 读取
+
 # --- 板块开关 ---
 sections:
   holiday_countdown: true     # 节日倒计时

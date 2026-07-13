@@ -2,6 +2,7 @@
 """
 每日新闻速览 · 邮件推送
 - 并行拉取天气、热点、新闻、微语、农历
+- AI 智能摘要热点事件和新闻标题
 - 渲染 HTML 邮件模板
 - 通过 SMTP 发送
 """
@@ -14,7 +15,7 @@ from jinja2 import Environment, FileSystemLoader
 # 添加项目根目录到 sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from sources import weather, hot_events, news, quote, holiday
+from sources import weather, hot_events, news, quote, holiday, ai_summary
 from email_sender import send_email
 
 
@@ -37,7 +38,7 @@ def load_config():
 def build_date_info() -> dict:
     """构建日期信息"""
     today = date.today()
-    weekdays = ["星期一", "星期二", "星期三", "四", "五", "六", "日"]
+    weekdays = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]
     wd = weekdays[today.weekday()]
     solar = today.strftime("%Y年%m月%d日")
 
@@ -51,11 +52,62 @@ def build_date_info() -> dict:
     }
 
 
+def enrich_with_ai(hot_list, news_categories, ai_enabled: bool) -> bool:
+    """
+    为热点事件和新闻标题添加 AI 摘要
+    返回是否有任何 AI 摘要生成成功
+    """
+    if not ai_enabled:
+        return False
+
+    # 收集所有标题，按序号建立 {n1: title, n2: title, ...} 映射
+    # 同时记录每个序号对应的 item 引用
+    titles_by_id = {}
+    num_to_item = {}  # {序号: item引用}
+    seq = 0
+
+    for source in hot_list:
+        if source.get("success"):
+            for item in source.get("items", []):
+                seq += 1
+                key = f"n{seq}"
+                titles_by_id[key] = item["title"]
+                num_to_item[seq] = item
+
+    for cat in news_categories:
+        if cat.get("success"):
+            for item in cat.get("items", []):
+                seq += 1
+                key = f"n{seq}"
+                titles_by_id[key] = item["title"]
+                num_to_item[seq] = item
+
+    if not titles_by_id:
+        return False
+
+    # 批量调用 AI（AI 内部会将序号 1,2,3... 映射回 titles_by_id 的 key）
+    print(f"🤖 AI 摘要: 共 {len(titles_by_id)} 条标题")
+    api_key = os.environ.get("DEEPSEEK_API_KEY", "")
+    summaries = ai_summary.batch_summarize(titles_by_id, api_key)
+
+    if not summaries:
+        return False
+
+    # 回填摘要：通过序号找到对应的 item
+    for seq_num, item in num_to_item.items():
+        key = f"n{seq_num}"
+        if key in summaries:
+            item["summary"] = summaries[key]
+
+    return True
+
+
 def main():
     cfg = load_config()
     email_cfg = cfg["email"]
     sections = cfg.get("sections", {})
     limits = cfg.get("limits", {})
+    ai_cfg = cfg.get("ai", {})
 
     # 验证必要配置
     if not email_cfg.get("smtp_user"):
@@ -113,7 +165,10 @@ def main():
         count = len(cat.get("items", []))
         print(f"   {status} {cat['category']}: {count} 条")
 
-    # 5. 每日微语
+    # 5. AI 智能摘要（热点 + 新闻）
+    has_ai = enrich_with_ai(hot_list, news_categories, ai_cfg.get("enabled", True))
+
+    # 6. 每日微语
     daily_quote = None
     if sections.get("daily_quote", True):
         print("💬 获取每日微语...")
@@ -123,7 +178,7 @@ def main():
         else:
             print(f"   使用备用微语")
 
-    # 6. 渲染 HTML
+    # 7. 渲染 HTML
     print("✍️  渲染邮件模板...")
     template_dir = os.path.join(os.path.dirname(__file__), "templates")
     env = Environment(loader=FileSystemLoader(template_dir))
@@ -139,10 +194,11 @@ def main():
         hot_events=hot_list,
         news_categories=news_categories,
         quote=daily_quote,
+        has_ai_summary=has_ai,
         generated_at=now.strftime("%Y-%m-%d %H:%M"),
     )
 
-    # 7. 发送邮件
+    # 8. 发送邮件
     print(f"📧 发送邮件到 {', '.join(email_cfg['to_emails'])}...")
     send_email(
         smtp_host=email_cfg["smtp_host"],
