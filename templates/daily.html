@@ -13,14 +13,13 @@
     background: #f5f6fa; color: #2c3e50;
   }
   .container {
-    max-width: 680px; margin: 20px auto;
-    background: #ffffff; border-radius: 12px;
-    overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    max-width: 680px; margin: 0 auto;
+    background: #ffffff; overflow: hidden;
   }
-  /* 头部 — 暖色渐变，清晰的白色文字 */
+  /* 头部 — 明亮渐变，手机端改为纵向排列 */
   .header {
     background: linear-gradient(135deg, #3b5998 0%, #4a6fa5 30%, #5b8cc9 100%);
-    color: #ffffff; padding: 36px 32px 28px;
+    color: #ffffff; padding: 28px 20px 22px;
     position: relative; overflow: hidden;
   }
   .header::before {
@@ -36,25 +35,27 @@
     background: rgba(255,255,255,0.04); border-radius: 50%;
   }
   .header-main-title {
-    font-size: 26px; font-weight: 800;
-    letter-spacing: 2px; margin-bottom: 6px;
+    font-size: 24px; font-weight: 800;
+    letter-spacing: 1px; margin-bottom: 4px;
     text-shadow: 0 1px 3px rgba(0,0,0,0.15);
     position: relative; z-index: 1;
   }
   .header-sub-title {
-    font-size: 14px; opacity: 0.85;
-    letter-spacing: 1px; position: relative; z-index: 1;
+    font-size: 13px; opacity: 0.85;
+    letter-spacing: 0.5px; position: relative; z-index: 1;
   }
   .header-date-box {
-    position: absolute; top: 32px; right: 32px;
-    text-align: right; z-index: 1;
+    position: relative; z-index: 1;
+    margin-top: 14px; padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    display: flex; align-items: baseline; gap: 10px;
   }
   .header-date {
     font-size: 15px; font-weight: 600;
     text-shadow: 0 1px 2px rgba(0,0,0,0.12);
   }
   .header-lunar {
-    font-size: 13px; opacity: 0.8; margin-top: 3px;
+    font-size: 13px; opacity: 0.75;
   }
   /* 内容区 */
   .content { padding: 0; }
@@ -62,53 +63,54 @@
   .countdown-bar {
     background: linear-gradient(135deg, #fff8ec 0%, #ffeed5 100%);
     border-bottom: 1px solid #ffe3b0;
-    padding: 14px 28px; text-align: center;
+    padding: 12px 16px; text-align: center;
   }
   .countdown-icon { font-size: 16px; }
   .countdown-text {
-    font-size: 15px; color: #c25b09; font-weight: 500;
+    font-size: 14px; color: #c25b09; font-weight: 500;
+    line-height: 1.6;
   }
   .countdown-name { font-weight: 700; color: #9a3e00; }
-  .countdown-date { font-size: 12px; color: #cc7a40; margin-top: 3px; }
+  .countdown-date { font-size: 12px; color: #cc7a40; margin-top: 2px; }
   /* 微语 */
   .quote-bar {
     background: linear-gradient(135deg, #f2faf0 0%, #e6f5e0 100%);
     border-bottom: 1px solid #c8e8bc;
-    padding: 18px 28px; text-align: center;
+    padding: 16px 16px; text-align: center;
   }
   .quote-icon { font-size: 16px; }
   .quote-text {
-    font-size: 15px; color: #2d7a1e;
-    font-style: italic; line-height: 1.7;
+    font-size: 14px; color: #2d7a1e;
+    font-style: italic; line-height: 1.8;
   }
   .quote-source {
-    font-size: 12px; color: #4ea832; margin-top: 6px;
+    font-size: 12px; color: #4ea832; margin-top: 4px;
   }
   /* 通用板块 */
   .section {
-    padding: 0 28px 8px;
+    padding: 0 16px 8px;
   }
   .section-title {
-    font-size: 18px; font-weight: 700;
-    padding: 24px 0 12px; margin: 0;
+    font-size: 17px; font-weight: 700;
+    padding: 20px 0 10px; margin: 0;
     border-bottom: 2px solid #eef1f6;
     display: flex; align-items: center; gap: 8px;
   }
-  .section-title .emoji { font-size: 20px; }
+  .section-title .emoji { font-size: 18px; }
   .section-title .text { color: #2c3e50; }
   /* 热点源 */
   .hot-source {
-    margin: 8px 0 16px; padding: 14px 18px;
-    background: #fafbfc; border-radius: 10px;
+    margin: 8px 0 14px; padding: 12px 14px;
+    background: #fafbfc; border-radius: 8px;
     border: 1px solid #eef1f6;
   }
   .hot-source-name {
-    font-size: 13px; font-weight: 600; color: #7f8c9b;
-    margin-bottom: 10px; letter-spacing: 0.5px;
+    font-size: 12px; font-weight: 600; color: #7f8c9b;
+    margin-bottom: 8px; letter-spacing: 0.3px;
   }
   .hot-source-name .dot {
     display: inline-block; width: 7px; height: 7px;
-    border-radius: 50%; margin-right: 7px; vertical-align: middle;
+    border-radius: 50%; margin-right: 6px; vertical-align: middle;
   }
   .hot-source-name .dot.weibo { background: #ff8200; }
   .hot-source-name .dot.baidu { background: #2932e1; }
@@ -117,28 +119,33 @@
   /* 列表项 */
   .item-list { list-style: none; margin: 0; padding: 0; }
   .item {
-    padding: 8px 0; font-size: 14px; line-height: 1.5;
+    padding: 10px 0; font-size: 14px; line-height: 1.6;
     border-bottom: 1px dashed #eee;
     display: flex; align-items: flex-start; gap: 8px;
-    flex-wrap: wrap;
   }
   .item:last-child { border-bottom: none; }
   .item .dot-index {
     flex-shrink: 0; width: 20px; height: 20px;
     border-radius: 50%; background: #eef1f6;
     text-align: center; line-height: 20px;
-    font-size: 11px; color: #8c98a4; margin-top: 1px;
+    font-size: 11px; color: #8c98a4; margin-top: 2px;
   }
   .item .dot-index.hot { background: #ff4d4f; color: #fff; }
   .item .item-content { flex: 1; min-width: 0; }
   .item a {
     color: #2c3e50; text-decoration: none;
     font-weight: 500; display: block;
+    word-break: break-all;
   }
   .item a:hover { color: #3b5998; }
+  .item .title-text {
+    font-weight: 500; display: block; word-break: break-all;
+  }
   .item .item-summary {
-    font-size: 12px; color: #8c98a4; margin-top: 3px;
-    line-height: 1.5; padding-left: 2px;
+    font-size: 13px; color: #5a6370; margin-top: 5px;
+    line-height: 1.7; padding: 6px 8px;
+    background: #f8f9fb; border-radius: 6px;
+    border-left: 3px solid #d0d7e2;
   }
   /* 新闻分类 */
   .news-category-header {
@@ -149,32 +156,100 @@
   }
   /* 天气卡片 */
   .weather-card {
-    display: flex; align-items: center; gap: 16px;
-    padding: 16px 20px; margin: 8px 0 16px;
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; margin: 6px 0 14px;
     background: linear-gradient(135deg, #eaf3ff 0%, #dce8fb 100%);
     border-radius: 10px;
   }
-  .weather-icon { font-size: 44px; flex-shrink: 0; }
-  .weather-info { flex: 1; }
-  .weather-temp { font-size: 22px; font-weight: 700; color: #2c5282; }
+  .weather-icon { font-size: 38px; flex-shrink: 0; }
+  .weather-info { flex: 1; min-width: 0; }
+  .weather-temp { font-size: 20px; font-weight: 700; color: #2c5282; }
   .weather-desc { font-size: 13px; color: #5a6d80; margin-top: 2px; }
   .weather-detail {
-    display: flex; gap: 16px; margin-top: 4px;
-    font-size: 12px; color: #8899aa;
+    display: flex; gap: 12px; margin-top: 4px;
+    font-size: 12px; color: #8899aa; flex-wrap: wrap;
   }
   /* AI 摘要标记 */
   .ai-badge {
-    display: inline-block; font-size: 10px; color: #8c98a4;
-    background: #f0f2f5; padding: 1px 6px; border-radius: 4px;
-    margin-left: 6px; vertical-align: middle; font-weight: 400;
+    display: inline-block; font-size: 10px; color: #7b68ee;
+    background: #f0eeff; padding: 1px 6px; border-radius: 4px;
+    margin-left: 6px; vertical-align: middle; font-weight: 500;
   }
   /* 尾部 */
   .footer {
-    padding: 20px 28px 24px; text-align: center;
+    padding: 16px 16px 20px; text-align: center;
     color: #b5bec7; font-size: 12px;
-    border-top: 1px solid #eef1f6; margin-top: 8px;
+    border-top: 1px solid #eef1f6; margin-top: 6px;
   }
   .footer-line { margin: 3px 0; }
+
+  /* ========== 手机端适配 ========== */
+  @media screen and (max-width: 480px) {
+    .container {
+      border-radius: 0; box-shadow: none;
+    }
+    .header {
+      padding: 22px 14px 18px;
+    }
+    .header-main-title {
+      font-size: 22px; letter-spacing: 0.5px;
+    }
+    .header-sub-title {
+      font-size: 12px;
+    }
+    .header-date-box {
+      margin-top: 12px; padding-top: 10px;
+      gap: 8px; flex-wrap: wrap;
+    }
+    .header-date {
+      font-size: 14px;
+    }
+    .header-lunar {
+      font-size: 12px;
+    }
+    .countdown-bar {
+      padding: 10px 14px;
+    }
+    .countdown-text {
+      font-size: 13px;
+    }
+    .quote-bar {
+      padding: 14px 14px;
+    }
+    .quote-text {
+      font-size: 13px;
+    }
+    .section {
+      padding: 0 12px 6px;
+    }
+    .section-title {
+      font-size: 16px; padding: 18px 0 8px;
+    }
+    .section-title .emoji { font-size: 16px; }
+    .hot-source {
+      padding: 10px 12px; border-radius: 6px;
+    }
+    .item {
+      font-size: 13px; padding: 8px 0;
+    }
+    .item .dot-index {
+      width: 18px; height: 18px; line-height: 18px;
+      font-size: 10px; margin-top: 1px;
+    }
+    .item .item-summary {
+      font-size: 12px; padding: 5px 7px;
+      border-left-width: 2px;
+    }
+    .weather-card {
+      gap: 10px; padding: 12px 14px;
+    }
+    .weather-icon { font-size: 32px; }
+    .weather-temp { font-size: 17px; }
+    .weather-detail { gap: 8px; font-size: 11px; }
+    .footer {
+      padding: 14px 14px 16px; font-size: 11px;
+    }
+  }
 
   /* 暗色模式适配 (支持的邮件客户端) */
   @media (prefers-color-scheme: dark) {
@@ -293,7 +368,7 @@
       <div class="section-title">
         <span class="emoji">🔥</span>
         <span class="text">热点事件</span>
-        {% if has_ai_summary %}<span class="ai-badge">AI 摘要</span>{% endif %}
+        {% if has_ai_summary %}<span class="ai-badge">AI 概述</span>{% endif %}
       </div>
       {% for source in hot_events %}
         {% if source.success and source['items'] %}
@@ -313,7 +388,7 @@
                 <span style="font-weight:500;">{{ item.title }}</span>
                 {% endif %}
                 {% if item.summary %}
-                <div class="item-summary">📝 {{ item.summary }}</div>
+                <div class="item-summary">{{ item.summary }}</div>
                 {% endif %}
               </div>
             </li>
@@ -346,10 +421,10 @@
               {% if item.url %}
               <a href="{{ item.url }}" target="_blank">{{ item.title }}</a>
               {% else %}
-              <span style="font-weight:500;">{{ item.title }}</span>
+              <span class="title-text">{{ item.title }}</span>
               {% endif %}
               {% if item.summary %}
-              <div class="item-summary">📝 {{ item.summary }}</div>
+              <div class="item-summary">{{ item.summary }}</div>
               {% endif %}
             </div>
           </li>
