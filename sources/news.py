@@ -33,9 +33,11 @@ FEEDS = {
 
 
 def _fetch_feed(url: str, timeout: int = 10) -> list:
-    """抓取 RSS/Atom 源"""
+    """抓取 RSS/Atom 源（先 requests 取内容再 parse，避免 feedparser 无超时卡死）"""
     try:
-        feed = feedparser.parse(url)
+        resp = requests.get(url, headers=HEADERS, timeout=timeout)
+        resp.raise_for_status()
+        feed = feedparser.parse(resp.text)
         items = []
         for entry in feed.entries[:5]:
             title = entry.get("title", "").strip()

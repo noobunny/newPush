@@ -8,8 +8,11 @@
 """
 import os
 import sys
+import random
 import yaml
+import time
 from datetime import datetime, date
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from jinja2 import Environment, FileSystemLoader
 
 # 添加项目根目录到 sys.path
@@ -103,6 +106,7 @@ def enrich_with_ai(hot_list, news_categories, ai_enabled: bool) -> bool:
 
 
 def main():
+    t_start = time.time()
     cfg = load_config()
     email_cfg = cfg["email"]
     sections = cfg.get("sections", {})
@@ -124,7 +128,7 @@ def main():
     print("📋 每日新闻速览 · 开始生成")
     print("=" * 50)
 
-    # 1. 日期 & 农历 & 倒计时
+    # 1. 日期 & 农历（本地计算，不需要网络）
     print("📅 获取日期信息...")
     date_info = build_date_info()
     next_holiday = None
@@ -136,49 +140,115 @@ def main():
         else:
             print("   未找到下一个节日")
 
-    # 2. 天气
+    # 2. 并行获取：天气 + 4 个热点源 + 4 个新闻分类 + 微语
+    print("\n⏳ 并行获取天气、热点、新闻、微语...")
+    executor = ThreadPoolExecutor(max_workers=10)
+    future_to_key = {}  # future -> key 反向映射
+
+    # 2a. 天气
     weather_data = None
     if cfg.get("weather", {}).get("enabled", True):
-        print(f"☀️  获取天气 ({cfg['weather']['city']})...")
-        weather_data = weather.fetch_weather(cfg["weather"]["city"])
-        if weather_data.get("success"):
-            print(f"   {weather_data['weather_desc']} {weather_data['temp_min']}-{weather_data['temp_max']}°C")
-        else:
-            print(f"   天气获取失败: {weather_data.get('error')}")
+        f = executor.submit(weather.fetch_weather, cfg["weather"]["city"])
+        future_to_key[f] = "weather"
 
-    # 3. 热点事件
-    hot_list = []
-    print("🔥 获取热点事件...")
+    # 2b. 热点事件 4 个源
+    hot_sources = {
+        "weibo_hot": ("微博热搜", hot_events.fetch_weibo_hot),
+        "baidu_hot": ("百度热搜", hot_events.fetch_baidu_hot),
+        "zhihu_hot": ("知乎热榜", hot_events.fetch_zhihu_hot),
+        "toutiao_hot": ("头条热榜", hot_events.fetch_toutiao_hot),
+    }
     hot_limit = limits.get("hot_events", 5)
-    hot_list = hot_events.fetch_all_hot_events(sections, limit=hot_limit)
-    for h in hot_list:
-        status = "✅" if h.get("success") else "❌"
-        count = len(h.get("items", []))
-        print(f"   {status} {h['name']}: {count} 条")
+    for key, (name, func) in hot_sources.items():
+        if sections.get(key, True):
+            f = executor.submit(func, hot_limit)
+            future_to_key[f] = f"hot:{key}:{name}"
 
-    # 4. 分类新闻
-    print("📰 获取分类新闻...")
+    # 2c. 新闻 4 个分类
+    news_cat_map = {
+        "domestic_news": "domestic",
+        "economy_news": "economy",
+        "tech_news": "tech",
+        "world_news": "world",
+    }
     news_limit = limits.get("news_per_category", 3)
-    news_categories = news.fetch_all_news(sections, limit=news_limit)
-    for cat in news_categories:
-        status = "✅" if cat.get("success") else "❌"
-        count = len(cat.get("items", []))
-        print(f"   {status} {cat['category']}: {count} 条")
+    for section_key, cat_key in news_cat_map.items():
+        if sections.get(section_key, True):
+            f = executor.submit(news.fetch_category_news, cat_key, news_limit)
+            future_to_key[f] = f"news:{cat_key}"
 
-    # 5. AI 智能摘要（热点 + 新闻）
-    has_ai = enrich_with_ai(hot_list, news_categories, ai_cfg.get("enabled", True))
-
-    # 6. 每日微语
-    daily_quote = None
+    # 2d. 每日微语
     if sections.get("daily_quote", True):
-        print("💬 获取每日微语...")
-        daily_quote = quote.fetch_quote()
-        if daily_quote.get("success"):
-            print(f"   {daily_quote['text'][:30]}...")
-        else:
-            print(f"   使用备用微语")
+        f = executor.submit(quote.fetch_quote)
+        future_to_key[f] = "quote"
 
-    # 7. 渲染 HTML
+    # 等待所有结果
+    hot_list = []
+    news_results = []
+    daily_quote = None
+    hot_source_names = {k: v[0] for k, v in hot_sources.items()}
+
+    for future in as_completed(future_to_key):
+        key = future_to_key[future]
+        try:
+            result = future.result(timeout=15)
+        except Exception as e:
+            print(f"   ❌ {key} 异常: {e}")
+            if key == "weather":
+                weather_data = {"success": False, "error": str(e), "city": cfg["weather"]["city"]}
+            elif key.startswith("hot:"):
+                _, source_key, name = key.split(":", 2)
+                hot_list.append({
+                    "success": False, "name": name, "source": name,
+                    "error": str(e), "items": [],
+                })
+            elif key.startswith("news:"):
+                cat_key = key.split(":", 1)[1]
+                news_results.append({
+                    "category": cat_key, "items": [], "success": False,
+                })
+            elif key == "quote":
+                fb = random.choice(quote.FALLBACK_QUOTES)
+                daily_quote = {"success": True, "text": fb["text"], "source": fb["source"]}
+            continue
+
+        if key == "weather":
+            weather_data = result
+            if result.get("success"):
+                print(f"   ☀️  天气: {result['weather_desc']} {result['temp_min']}-{result['temp_max']}°C")
+            else:
+                print(f"   ⚠️  天气获取失败: {result.get('error', '')}")
+        elif key.startswith("hot:"):
+            _, source_key, name = key.split(":", 2)
+            result["name"] = name
+            hot_list.append(result)
+            status = "✅" if result.get("success") else "❌"
+            count = len(result.get("items", []))
+            print(f"   {status} {name}: {count} 条")
+        elif key.startswith("news:"):
+            cat_key = key.split(":", 1)[1]
+            news_results.append(result)
+            status = "✅" if result.get("success") else "❌"
+            count = len(result.get("items", []))
+            print(f"   {status} {cat_key}: {count} 条")
+        elif key == "quote":
+            daily_quote = result
+            if result.get("success"):
+                print(f"   💬 微语: {result['text'][:30]}...")
+            else:
+                print(f"   ⚠️  微语获取失败")
+
+    executor.shutdown(wait=False)
+    t_network = time.time() - t_start
+    print(f"   ⏱️  网络请求耗时: {t_network:.1f}s")
+
+    # 3. AI 智能摘要（热点 + 新闻）
+    has_ai = enrich_with_ai(hot_list, news_results, ai_cfg.get("enabled", True))
+    t_ai = time.time() - t_start
+    if has_ai:
+        print(f"   ⏱️  AI 摘要耗时: {t_ai - t_network:.1f}s")
+
+    # 4. 渲染 HTML
     print("✍️  渲染邮件模板...")
     template_dir = os.path.join(os.path.dirname(__file__), "templates")
     env = Environment(loader=FileSystemLoader(template_dir))
@@ -192,13 +262,13 @@ def main():
         holiday=next_holiday,
         weather=weather_data,
         hot_events=hot_list,
-        news_categories=news_categories,
+        news_categories=news_results,
         quote=daily_quote,
         has_ai_summary=has_ai,
         generated_at=now.strftime("%Y-%m-%d %H:%M"),
     )
 
-    # 8. 发送邮件
+    # 5. 发送邮件
     print(f"📧 发送邮件到 {', '.join(email_cfg['to_emails'])}...")
     send_email(
         smtp_host=email_cfg["smtp_host"],
@@ -210,8 +280,9 @@ def main():
         html_body=html_body,
     )
 
+    t_total = time.time() - t_start
     print("=" * 50)
-    print("✅ 邮件发送成功！")
+    print(f"✅ 邮件发送成功！总耗时 {t_total:.1f}s")
     print("=" * 50)
 
 
